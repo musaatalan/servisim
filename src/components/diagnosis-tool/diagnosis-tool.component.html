@@ -1,0 +1,93 @@
+<div class="space-y-8">
+  <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700">
+    <h3 class="text-2xl font-bold text-white mb-4">Arıza Açıklaması</h3>
+    <p class="text-gray-400 mb-6">Lütfen kombi veya ısıtma sistemiyle ilgili gözlemlediğiniz sorunu ayrıntılı olarak açıklayın. Hata kodları, duyduğunuz sesler ve sorunun ne zaman başladığı gibi bilgileri ekleyin.</p>
+    <textarea 
+      [value]="problemDescription()"
+      (input)="updateProblemDescription($event)"
+      rows="4" 
+      class="w-full p-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-colors"
+      placeholder="Örn: Kombi su sızdırıyor ve basınç sürekli düşüyor..."></textarea>
+    <button (click)="getDiagnosis()" [disabled]="isLoading()" class="mt-4 w-full flex justify-center items-center px-6 py-3 bg-orange-600 text-white font-semibold rounded-md hover:bg-orange-700 disabled:bg-orange-800 disabled:cursor-not-allowed transition-colors">
+      @if (isLoading()) {
+        <i class="fas fa-spinner fa-spin mr-2"></i>
+        <span>Analiz Ediliyor...</span>
+      } @else {
+        <i class="fas fa-robot mr-2"></i>
+        <span>AI ile Arıza Tespiti Yap</span>
+      }
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="bg-red-900 border border-red-700 text-red-200 p-4 rounded-lg shadow-lg">
+      <h4 class="font-bold mb-2"><i class="fas fa-exclamation-triangle mr-2"></i>Bir Hata Oluştu</h4>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  @if (diagnosis(); as diag) {
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-700 space-y-6">
+      <h3 class="text-3xl font-extrabold text-white border-b-2 border-orange-500 pb-3 mb-6">AI Teşhis Raporu</h3>
+
+      <!-- Safety Warnings -->
+      <div class="bg-red-900/50 border-l-4 border-red-500 p-4 rounded-md">
+        <h4 class="text-xl font-bold text-red-300 mb-2"><i class="fas fa-shield-alt mr-2"></i>Önemli Güvenlik Uyarıları</h4>
+        <ul class="list-disc list-inside space-y-1 text-red-200">
+          @for (warning of diag.safetyWarnings; track warning) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      </div>
+
+      <!-- Possible Causes -->
+      <div>
+        <h4 class="text-2xl font-bold text-white mb-4"><i class="fas fa-lightbulb mr-2 text-orange-400"></i>Olası Nedenler</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (item of diag.possibleCauses; track item.cause) {
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <div class="flex justify-between items-start mb-2">
+                <h5 class="text-lg font-semibold text-orange-400">{{ item.cause }}</h5>
+                <span class="text-xs font-bold px-2 py-1 rounded-full"
+                  [class]="item.likelihood === 'High' ? 'bg-red-500 text-white' : (item.likelihood === 'Medium' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white')">
+                  {{ item.likelihood }}
+                </span>
+              </div>
+              <p class="text-gray-300 text-sm">{{ item.details }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Recommended Solutions -->
+      <div>
+        <h4 class="text-2xl font-bold text-white mb-4"><i class="fas fa-hammer mr-2 text-orange-400"></i>Önerilen Çözümler</h4>
+        <div class="space-y-4">
+          @for (solution of diag.recommendedSolutions; track solution.solution) {
+            <div class="bg-gray-700 p-4 rounded-lg">
+              <h5 class="text-xl font-semibold text-orange-400 mb-3">{{ solution.solution }}</h5>
+              @if (solution.requiredParts.length > 0) {
+                <div class="mb-3">
+                  <h6 class="font-bold text-gray-300 mb-1">Gerekli Parçalar:</h6>
+                  <div class="flex flex-wrap gap-2">
+                    @for (part of solution.requiredParts; track part) {
+                      <span class="bg-gray-600 text-gray-200 text-xs font-medium px-2.5 py-1 rounded-full">{{ part }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              <div>
+                <h6 class="font-bold text-gray-300 mb-2">Adımlar:</h6>
+                <ol class="list-decimal list-inside space-y-2 text-gray-300">
+                  @for (step of solution.steps; track step) {
+                    <li>{{ step }}</li>
+                  }
+                </ol>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
